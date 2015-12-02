@@ -37,7 +37,7 @@ public class SchemaBuilderTest {
 
         Schema userSchema = schemas.get(1);
         assertEquals("User", userSchema.getName());
-        assertEquals(8, userSchema.getProperties().size());
+        assertEquals(9, userSchema.getProperties().size());
         assertEquals("string", userSchema.getProperty("firstName").getType());
         assertEquals("string", userSchema.getProperty("lastName").getType());
         assertEquals("Address", userSchema.getProperty("homeAddress").getType());
@@ -46,6 +46,7 @@ public class SchemaBuilderTest {
         assertEquals("number", userSchema.getProperty("favoriteNumber").getType());
         assertEquals("{[key:string]:number}", userSchema.getProperty("lookupFoo").getType());
         assertEquals("{[key:string]:string}", userSchema.getProperty("lookupBar").getType());
+        assertEquals("Address[]", userSchema.getProperty("additionalAddresses").getType());
 
     }
 }

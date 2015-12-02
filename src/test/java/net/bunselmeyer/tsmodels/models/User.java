@@ -4,6 +4,7 @@ package net.bunselmeyer.tsmodels.models;
 import org.joda.time.LocalDate;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 public class User implements Model {
@@ -16,6 +17,7 @@ public class User implements Model {
     private BigDecimal favoriteNumber;
     private Map<String, Double> lookupFoo;
     private Map<Integer, String> lookupBar;
+    private List<Address> additionalAddresses;
 
     public String getFirstName() {
         return firstName;
@@ -86,6 +88,15 @@ public class User implements Model {
 
     public User setLookupBar(Map<Integer, String> lookupBar) {
         this.lookupBar = lookupBar;
+        return this;
+    }
+
+    public List<Address> getAdditionalAddresses() {
+        return additionalAddresses;
+    }
+
+    public User setAdditionalAddresses(List<Address> additionalAddresses) {
+        this.additionalAddresses = additionalAddresses;
         return this;
     }
 }

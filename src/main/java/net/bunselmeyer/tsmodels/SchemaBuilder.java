@@ -104,23 +104,28 @@ public class SchemaBuilder {
 
         Map<String, JsonSchema> properties = objectSchema.getProperties();
         List<JsonSchema> jsonSchemas = properties.values().stream().filter((s) -> s.getId() != null).collect(Collectors.toList());
-        ImmutableMap<String, JsonSchema> map = Maps.uniqueIndex(jsonSchemas, JsonSchema::getId);
+        ImmutableMap<String, JsonSchema> jsonSchemaIndex = Maps.uniqueIndex(jsonSchemas, JsonSchema::getId);
 
         return properties.keySet().stream()
                 .sorted()
                 .reduce(new Schema(type.getSimpleName()), (schema, name) -> {
                     JsonSchema propertySchema = properties.get(name);
-                    if (StringUtils.isNotBlank(propertySchema.get$ref()) && map.containsKey(propertySchema.get$ref())) {
-                        propertySchema = map.get(propertySchema.get$ref());
-                    }
-                    String typeLabel = buildTypeNotation(propertySchema, classNames);
+                    String typeLabel = buildTypeNotation(propertySchema, jsonSchemaIndex, classNames);
                     schema.addProperty(name, typeLabel);
                     return schema;
                 }, (schema, __) -> schema);
     }
 
-    private String buildTypeNotation(JsonSchema propertySchema, List<String> classNames) {
-
+    private String buildTypeNotation(JsonSchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
+        String $ref = propertySchema.get$ref();
+        if (StringUtils.isNotBlank($ref)) {
+            String classPath = convertIdToClassPath($ref);
+            if (jsonSchemaIndex.containsKey($ref)) {
+                propertySchema = jsonSchemaIndex.get($ref);
+            } else if (classNames.contains(classPath)) {
+                return getSimpleName(classPath);
+            }
+        }
         if (propertySchema.isStringSchema()) {
             return TSType.STRING.getNotation();
         } else if (propertySchema.isBooleanSchema()) {
@@ -128,47 +133,54 @@ public class SchemaBuilder {
         } else if (propertySchema.isNumberSchema()) {
             return TSType.NUMBER.getNotation();
         } else if (propertySchema.isObjectSchema()) {
-            return buildObjectTypeNotation(propertySchema.asObjectSchema(), classNames);
+            return buildObjectTypeNotation(propertySchema.asObjectSchema(), jsonSchemaIndex, classNames);
         } else if (propertySchema.isArraySchema()) {
-            return buildArrayTypeNotation(propertySchema.asArraySchema(), classNames);
+            return buildArrayTypeNotation(propertySchema.asArraySchema(), jsonSchemaIndex, classNames);
         }
 
         return TSType.ANY.getNotation();
     }
 
-    private String buildArrayTypeNotation(ArraySchema propertySchema, List<String> classNames) {
+    private String buildArrayTypeNotation(ArraySchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
         ArraySchema.Items items = propertySchema.getItems();
         if (items.isSingleItems()) {
-            return buildTypeNotation(items.asSingleItems().getSchema(), classNames) + "[]";
+            return buildTypeNotation(items.asSingleItems().getSchema(), jsonSchemaIndex, classNames) + "[]";
         } else {
             return TSType.ANY.getNotation() + "[]";
         }
     }
 
-    private String buildObjectTypeNotation(ObjectSchema propertySchema, List<String> classNames) {
+    private String buildObjectTypeNotation(ObjectSchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
         // urn:jsonschema:net:bunselmeyer:tsmodels:models:Address
         String id = propertySchema.getId();
         if (StringUtils.isBlank(id)) {
-            return buildMapTypeNotation(propertySchema, classNames);
+            return buildMapTypeNotation(propertySchema, jsonSchemaIndex, classNames);
         }
-        String path = id.replace("urn:jsonschema:", "").replace(":", ".");
+        String path = convertIdToClassPath(id);
         if (classNames.contains(path)) {
-            int i = StringUtils.lastIndexOf(path, ".");
-            return StringUtils.right(path, path.length() - i - 1);
-        } else {
-            return TSType.ANY.getNotation();
+            return getSimpleName(path);
         }
+        return TSType.ANY.getNotation();
     }
 
-    private String buildMapTypeNotation(ObjectSchema propertySchema, List<String> classNames) {
+    private String buildMapTypeNotation(ObjectSchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
         ObjectSchema.AdditionalProperties additionalProperties = propertySchema.getAdditionalProperties();
         if (!(additionalProperties instanceof ObjectSchema.SchemaAdditionalProperties)) {
             return TSType.ANY.getNotation();
         }
         JsonSchema jsonSchema = ((ObjectSchema.SchemaAdditionalProperties) additionalProperties).getJsonSchema();
-        String tsType = buildTypeNotation(jsonSchema, classNames);
+        String tsType = buildTypeNotation(jsonSchema, jsonSchemaIndex, classNames);
         // JSON any supports strings as keys
         return "{[key:string]:" + tsType + "}";
+    }
+
+    private static String getSimpleName(String classPath) {
+        int i = StringUtils.lastIndexOf(classPath, ".");
+        return StringUtils.right(classPath, classPath.length() - i - 1);
+    }
+
+    private static String convertIdToClassPath(String id) {
+        return id.replace("urn:jsonschema:", "").replace(":", ".");
     }
 
 }
