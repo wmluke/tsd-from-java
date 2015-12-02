@@ -44,7 +44,12 @@ public class SchemaBuilder {
 
     public List<Schema> build() {
         List<String> classNames = types.stream().map(Class::getName).collect(Collectors.toList());
-        return types.stream().map((type) -> build(type, classNames)).filter(Objects::nonNull).collect(Collectors.toList());
+        return types.stream()
+                .map((type) -> build(type, classNames))
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted((a, b) -> a.getName().compareTo(b.getName()))
+                .collect(Collectors.toList());
     }
 
     private Schema build(Class<?> type, List<String> classNames) {
