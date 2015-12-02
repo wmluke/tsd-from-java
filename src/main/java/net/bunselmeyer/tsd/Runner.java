@@ -1,4 +1,4 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -17,9 +17,9 @@ import java.util.Set;
 public class Runner {
 
     public static void main(String[] args) throws IOException {
-        ArgumentParser parser = ArgumentParsers.newArgumentParser("tsmodels")
+        ArgumentParser parser = ArgumentParsers.newArgumentParser("tsd-from-java")
                 .defaultHelp(true)
-                .description("Generate Typescript type definitions from Java POJOS");
+                .description("Generate Typescript type definitions from Java");
 
 
         parser.addArgument("-p", "--packages")

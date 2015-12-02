@@ -1,4 +1,4 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
 import org.reflections.Reflections;
 import org.reflections.scanners.SubTypesScanner;

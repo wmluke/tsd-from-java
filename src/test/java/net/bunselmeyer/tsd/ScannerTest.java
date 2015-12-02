@@ -1,6 +1,6 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
-import net.bunselmeyer.tsmodels.models.Model;
+import net.bunselmeyer.tsd.models.Model;
 import org.junit.Test;
 
 import java.util.ArrayList;

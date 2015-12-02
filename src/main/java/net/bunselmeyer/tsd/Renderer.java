@@ -1,4 +1,4 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
@@ -24,7 +24,7 @@ public class Renderer {
 
     public void render() throws IOException {
         TemplateLoader loader = new ClassPathTemplateLoader();
-        loader.setPrefix("/net/bunselmeyer/tsmodels/templates");
+        loader.setPrefix("/net/bunselmeyer/tsd/templates");
 
         Handlebars handlebars = new Handlebars(loader);
 

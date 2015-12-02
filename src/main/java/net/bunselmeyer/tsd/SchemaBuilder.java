@@ -1,4 +1,4 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -151,7 +151,7 @@ public class SchemaBuilder {
     }
 
     private String buildObjectTypeNotation(ObjectSchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
-        // urn:jsonschema:net:bunselmeyer:tsmodels:models:Address
+        // urn:jsonschema:net:bunselmeyer:tsd:models:Address
         String id = propertySchema.getId();
         if (StringUtils.isBlank(id)) {
             return buildMapTypeNotation(propertySchema, jsonSchemaIndex, classNames);

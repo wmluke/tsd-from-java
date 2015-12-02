@@ -1,4 +1,4 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;

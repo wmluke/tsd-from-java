@@ -1,4 +1,4 @@
-package net.bunselmeyer.tsmodels.models;
+package net.bunselmeyer.tsd.models;
 
 
 import org.joda.time.LocalDate;

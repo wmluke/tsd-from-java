@@ -1,10 +1,10 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
-import net.bunselmeyer.tsmodels.models.User;
+import net.bunselmeyer.tsd.models.User;
 import org.junit.Test;
 
 import java.util.Map;

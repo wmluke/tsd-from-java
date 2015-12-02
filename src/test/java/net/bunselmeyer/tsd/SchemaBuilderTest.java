@@ -1,7 +1,7 @@
-package net.bunselmeyer.tsmodels;
+package net.bunselmeyer.tsd;
 
-import net.bunselmeyer.tsmodels.models.Address;
-import net.bunselmeyer.tsmodels.models.User;
+import net.bunselmeyer.tsd.models.Address;
+import net.bunselmeyer.tsd.models.User;
 import org.junit.Test;
 
 import java.util.LinkedHashSet;
