@@ -1,5 +1,7 @@
 # tsd-from-java
 
+[![Build Status](https://travis-ci.org/wmluke/tsd-from-java.svg?branch=master)](https://travis-ci.org/wmluke/tsd-from-java)
+
 A Java utility to generate Typescript type definitions from Java.
 
 ## Usage
