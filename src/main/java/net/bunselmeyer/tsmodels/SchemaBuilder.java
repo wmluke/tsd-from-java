@@ -1,12 +1,18 @@
 package net.bunselmeyer.tsmodels;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.types.ArraySchema;
 import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -23,23 +29,54 @@ public class SchemaBuilder {
         STRING("string"),
         ANY("any");
 
-        private final String typeLabel;
+        private final String notation;
 
-        TSType(String typeLabel) {
-            this.typeLabel = typeLabel;
+        TSType(String notation) {
+            this.notation = notation;
         }
 
-        public String getTypeLabel() {
-            return typeLabel;
+        public String getNotation() {
+            return notation;
         }
     }
 
     private final Set<Class<?>> types;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public SchemaBuilder(Set<Class<?>> types) {
+        this(types, configureObjectMapper(new ObjectMapper()));
+    }
+
+    public SchemaBuilder(Set<Class<?>> types, ObjectMapper objectMapper) {
         this.types = types;
-        mapper.registerModule(new JodaModule());
+        this.objectMapper = objectMapper;
+    }
+
+    public static ObjectMapper configureObjectMapper(ObjectMapper objectMapper) {
+        objectMapper.registerModule(new JodaModule());
+        // Allow serialization of "empty" POJOs (no properties to serialize)
+        // (without this setting, an exception is thrown in those cases)
+        objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+
+        // Write java.util.Date, Calendar as number (timestamp)
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        objectMapper.disable(SerializationFeature.WRITE_DATE_KEYS_AS_TIMESTAMPS);
+
+        // Prevent exception when encountering unknown property
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        // Coerce JSON empty String ("") to null
+        objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
+
+        // Coerce unknown enum to null
+        objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
+
+        objectMapper.enable(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN);
+        objectMapper.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
+
+        // Force escaping of non-ASCII characters
+        objectMapper.configure(JsonGenerator.Feature.ESCAPE_NON_ASCII, true);
+        return objectMapper;
     }
 
     public List<Schema> build() {
@@ -53,67 +90,85 @@ public class SchemaBuilder {
     }
 
     private Schema build(Class<?> type, List<String> classNames) {
-        JsonSchemaGenerator generator = new JsonSchemaGenerator(mapper);
+        JsonSchemaGenerator generator = new JsonSchemaGenerator(objectMapper);
         JsonSchema jsonSchema = null;
         try {
             jsonSchema = generator.generateSchema(type);
         } catch (JsonMappingException e) {
-            return null;
+            throw new RuntimeException(e);
         }
         ObjectSchema objectSchema = jsonSchema.asObjectSchema();
         if (objectSchema == null) {
             return null;
         }
-        Schema schema = new Schema(type.getSimpleName());
+
         Map<String, JsonSchema> properties = objectSchema.getProperties();
-        for (Map.Entry<String, JsonSchema> entry : properties.entrySet()) {
-            JsonSchema propertySchema = entry.getValue();
+        List<JsonSchema> jsonSchemas = properties.values().stream().filter((s) -> s.getId() != null).collect(Collectors.toList());
+        ImmutableMap<String, JsonSchema> map = Maps.uniqueIndex(jsonSchemas, JsonSchema::getId);
 
-            String typeLabel = getTSType(propertySchema, classNames);
-
-            schema.addProperty(entry.getKey(), typeLabel);
-
-        }
-
-        return schema;
-
+        return properties.keySet().stream()
+                .sorted()
+                .reduce(new Schema(type.getSimpleName()), (schema, name) -> {
+                    JsonSchema propertySchema = properties.get(name);
+                    if (StringUtils.isNotBlank(propertySchema.get$ref()) && map.containsKey(propertySchema.get$ref())) {
+                        propertySchema = map.get(propertySchema.get$ref());
+                    }
+                    String typeLabel = buildTypeNotation(propertySchema, classNames);
+                    schema.addProperty(name, typeLabel);
+                    return schema;
+                }, (schema, __) -> schema);
     }
 
-    private String getTSType(JsonSchema propertySchema, List<String> classNames) {
+    private String buildTypeNotation(JsonSchema propertySchema, List<String> classNames) {
 
         if (propertySchema.isStringSchema()) {
-            return TSType.STRING.getTypeLabel();
+            return TSType.STRING.getNotation();
         } else if (propertySchema.isBooleanSchema()) {
-            return TSType.BOOLEAN.getTypeLabel();
+            return TSType.BOOLEAN.getNotation();
         } else if (propertySchema.isNumberSchema()) {
-            return TSType.NUMBER.getTypeLabel();
+            return TSType.NUMBER.getNotation();
         } else if (propertySchema.isObjectSchema()) {
-            return getObjectType(propertySchema, classNames);
+            return buildObjectTypeNotation(propertySchema.asObjectSchema(), classNames);
         } else if (propertySchema.isArraySchema()) {
-            ArraySchema.Items items = propertySchema.asArraySchema().getItems();
-            if (items.isSingleItems()) {
-                return getTSType(items.asSingleItems().getSchema(), classNames) + "[]";
-            } else {
-                return TSType.ANY.getTypeLabel() + "[]";
-            }
+            return buildArrayTypeNotation(propertySchema.asArraySchema(), classNames);
         }
 
-        return TSType.ANY.getTypeLabel();
+        return TSType.ANY.getNotation();
     }
 
-    private String getObjectType(JsonSchema propertySchema, List<String> classNames) {
+    private String buildArrayTypeNotation(ArraySchema propertySchema, List<String> classNames) {
+        ArraySchema.Items items = propertySchema.getItems();
+        if (items.isSingleItems()) {
+            return buildTypeNotation(items.asSingleItems().getSchema(), classNames) + "[]";
+        } else {
+            return TSType.ANY.getNotation() + "[]";
+        }
+    }
+
+    private String buildObjectTypeNotation(ObjectSchema propertySchema, List<String> classNames) {
         // urn:jsonschema:net:bunselmeyer:tsmodels:models:Address
         String id = propertySchema.getId();
         if (StringUtils.isBlank(id)) {
-            return TSType.ANY.getTypeLabel();
+            return buildMapTypeNotation(propertySchema, classNames);
         }
         String path = id.replace("urn:jsonschema:", "").replace(":", ".");
         if (classNames.contains(path)) {
             int i = StringUtils.lastIndexOf(path, ".");
             return StringUtils.right(path, path.length() - i - 1);
         } else {
-            return TSType.ANY.getTypeLabel();
+            return TSType.ANY.getNotation();
         }
+    }
+
+    private String buildMapTypeNotation(ObjectSchema propertySchema, List<String> classNames) {
+        ObjectSchema.AdditionalProperties additionalProperties = propertySchema.getAdditionalProperties();
+        if (!(additionalProperties instanceof ObjectSchema.SchemaAdditionalProperties)) {
+            return TSType.ANY.getNotation();
+        }
+        JsonSchema jsonSchema = ((ObjectSchema.SchemaAdditionalProperties) additionalProperties).getJsonSchema();
+        String tsType = buildTypeNotation(jsonSchema, classNames);
+        // JSON any supports strings as keys
+        return "{[key:string]:" + tsType + "}";
     }
 
 }

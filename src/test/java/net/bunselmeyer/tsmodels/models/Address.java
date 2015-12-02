@@ -2,39 +2,24 @@ package net.bunselmeyer.tsmodels.models;
 
 public class Address implements Model {
 
-    private String streetAddress1;
-    private String streetAddress2;
-    private String streetAddress3;
+    public enum State {
+        CA,
+        NY,
+        WA
+    }
 
+    private String streetAddress;
     private String city;
-    private String state;
+    private State state;
     private String zipCode;
     private String country;
 
-    public String getStreetAddress1() {
-        return streetAddress1;
+    public String getStreetAddress() {
+        return streetAddress;
     }
 
-    public Address setStreetAddress1(String streetAddress1) {
-        this.streetAddress1 = streetAddress1;
-        return this;
-    }
-
-    public String getStreetAddress2() {
-        return streetAddress2;
-    }
-
-    public Address setStreetAddress2(String streetAddress2) {
-        this.streetAddress2 = streetAddress2;
-        return this;
-    }
-
-    public String getStreetAddress3() {
-        return streetAddress3;
-    }
-
-    public Address setStreetAddress3(String streetAddress3) {
-        this.streetAddress3 = streetAddress3;
+    public Address setStreetAddress(String streetAddress) {
+        this.streetAddress = streetAddress;
         return this;
     }
 
@@ -47,11 +32,11 @@ public class Address implements Model {
         return this;
     }
 
-    public String getState() {
+    public State getState() {
         return state;
     }
 
-    public Address setState(String state) {
+    public Address setState(State state) {
         this.state = state;
         return this;
     }

@@ -1,14 +1,21 @@
 package net.bunselmeyer.tsmodels.models;
 
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDate;
+
+import java.math.BigDecimal;
+import java.util.Map;
 
 public class User implements Model {
 
     private String firstName;
     private String lastName;
-    private Address address;
-    private DateTime dateOfBirth;
+    private Address homeAddress;
+    private Address workAddress;
+    private LocalDate dateOfBirth;
+    private BigDecimal favoriteNumber;
+    private Map<String, Double> lookupFoo;
+    private Map<Integer, String> lookupBar;
 
     public String getFirstName() {
         return firstName;
@@ -28,21 +35,57 @@ public class User implements Model {
         return this;
     }
 
-    public Address getAddress() {
-        return address;
+    public Address getHomeAddress() {
+        return homeAddress;
     }
 
-    public User setAddress(Address address) {
-        this.address = address;
+    public User setHomeAddress(Address homeAddress) {
+        this.homeAddress = homeAddress;
         return this;
     }
 
-    public DateTime getDateOfBirth() {
+    public Address getWorkAddress() {
+        return workAddress;
+    }
+
+    public User setWorkAddress(Address workAddress) {
+        this.workAddress = workAddress;
+        return this;
+    }
+
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public User setDateOfBirth(DateTime dateOfBirth) {
+    public User setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
+        return this;
+    }
+
+    public BigDecimal getFavoriteNumber() {
+        return favoriteNumber;
+    }
+
+    public User setFavoriteNumber(BigDecimal favoriteNumber) {
+        this.favoriteNumber = favoriteNumber;
+        return this;
+    }
+
+    public Map<String, Double> getLookupFoo() {
+        return lookupFoo;
+    }
+
+    public User setLookupFoo(Map<String, Double> lookupFoo) {
+        this.lookupFoo = lookupFoo;
+        return this;
+    }
+
+    public Map<Integer, String> getLookupBar() {
+        return lookupBar;
+    }
+
+    public User setLookupBar(Map<Integer, String> lookupBar) {
+        this.lookupBar = lookupBar;
         return this;
     }
 }

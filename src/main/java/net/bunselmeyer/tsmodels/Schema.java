@@ -1,13 +1,12 @@
 package net.bunselmeyer.tsmodels;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Schema {
-    private final List<SchemaProperty> properties = new ArrayList<>();
+    private final Map<String, SchemaProperty> properties = new LinkedHashMap<>();
     private final String name;
 
     public Schema(String name) {
@@ -19,12 +18,16 @@ public class Schema {
     }
 
     public Schema addProperty(String name, String type) {
-        properties.add(new SchemaProperty(name, type));
+        properties.put(name, new SchemaProperty(name, type));
         return this;
     }
 
+    public SchemaProperty getProperty(String name) {
+        return properties.get(name);
+    }
+
     public List<SchemaProperty> getProperties() {
-        return properties;
+        return new ArrayList<>(properties.values());
     }
 
     @Override
@@ -58,6 +61,30 @@ public class Schema {
 
         public String getType() {
             return type;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SchemaProperty that = (SchemaProperty) o;
+            return new EqualsBuilder()
+                    .append(name, that.name)
+                    .append(type, that.type)
+                    .isEquals();
+        }
+
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder(17, 37)
+                    .append(name)
+                    .append(type)
+                    .toHashCode();
+        }
+
+        @Override
+        public String toString() {
+            return name + ":" + type;
         }
     }
 }
