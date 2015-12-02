@@ -1,5 +1,6 @@
 package net.bunselmeyer.tsmodels;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -21,9 +22,9 @@ public class Runner {
                 .description("Generate Typescript type definitions from Java POJOS");
 
 
-        parser.addArgument("-p", "--package")
+        parser.addArgument("-p", "--packages")
                 .required(true)
-                .help("Java package to scan");
+                .help("Comma separated list of java packages");
 
         parser.addArgument("-m", "--module")
                 .required(true)
@@ -49,7 +50,7 @@ public class Runner {
         }
 
         String module = ns.getString("module");
-        String packageName = ns.getString("package");
+        String packages = ns.getString("packages");
         String outputFile = ns.getString("output");
         String jarFile = ns.<String>getList("jar").get(0);
 
@@ -60,12 +61,20 @@ public class Runner {
 
         ClassPathHack.addURL(file.toURI().toURL());
 
-        Set<Class<?>> classes = new Scanner(Lists.newArrayList(packageName)).scan();
+        List<String> packageList = Lists.newArrayList(Splitter.on(",").omitEmptyStrings().trimResults().split(packages));
+
+        Set<Class<?>> classes = new Scanner(packageList).scan();
+
+        System.out.println("-> Found " + classes.size() + " classes");
 
         List<Schema> schemas = new SchemaBuilder(classes).build();
 
+        System.out.println("-> Generated " + schemas.size() + " schemas");
+
         Renderer renderer = new Renderer(module, schemas, new PrintWriter(outputFile, "UTF-8"));
         renderer.render();
+
+        System.out.println("-> Saved typescript definitions to `" + outputFile + "`");
 
 
     }
