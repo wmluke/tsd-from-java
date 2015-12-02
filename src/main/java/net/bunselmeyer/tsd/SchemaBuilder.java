@@ -14,6 +14,8 @@ import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SchemaBuilder {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(SchemaBuilder.class);
 
     public enum TSType {
         BOOLEAN("boolean"),
@@ -99,6 +103,7 @@ public class SchemaBuilder {
         }
         ObjectSchema objectSchema = jsonSchema.asObjectSchema();
         if (objectSchema == null) {
+            LOGGER.warn("Failed to generate schema for `{}`", type.getName());
             return null;
         }
 
@@ -111,6 +116,11 @@ public class SchemaBuilder {
                 .reduce(new Schema(type.getSimpleName()), (schema, name) -> {
                     JsonSchema propertySchema = properties.get(name);
                     String typeLabel = buildTypeNotation(propertySchema, jsonSchemaIndex, classNames);
+
+                    if ("any".equals(typeLabel)) {
+                        LOGGER.warn("Cannot resolve type for `{}#{}`", type.getName(), name);
+                    }
+
                     schema.addProperty(name, typeLabel);
                     return schema;
                 }, (schema, __) -> schema);
@@ -166,7 +176,7 @@ public class SchemaBuilder {
     private String buildMapTypeNotation(ObjectSchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
         ObjectSchema.AdditionalProperties additionalProperties = propertySchema.getAdditionalProperties();
         if (!(additionalProperties instanceof ObjectSchema.SchemaAdditionalProperties)) {
-            return TSType.ANY.getNotation();
+            return "{[key:string]:any}";
         }
         JsonSchema jsonSchema = ((ObjectSchema.SchemaAdditionalProperties) additionalProperties).getJsonSchema();
         String tsType = buildTypeNotation(jsonSchema, jsonSchemaIndex, classNames);

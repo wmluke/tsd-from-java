@@ -1,0 +1,19 @@
+module App.Model {
+
+    export interface Foo {
+
+    aaa:string;
+
+    bbb:number;
+
+}
+
+    export interface Bar {
+
+    ccc:boolean;
+
+    ddd:Foo;
+
+}
+
+}

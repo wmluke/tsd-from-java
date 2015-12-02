@@ -1,6 +1,8 @@
 package net.bunselmeyer.tsd;
 
+import net.bunselmeyer.tsd.models.Address;
 import net.bunselmeyer.tsd.models.Model;
+import net.bunselmeyer.tsd.models.User;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -21,6 +23,9 @@ public class ScannerTest {
         Set<Class<?>> classes = scanner.scan();
 
         assertEquals(3, classes.size());
+        assertEquals(true, classes.contains(Model.class));
+        assertEquals(true, classes.contains(Address.class));
+        assertEquals(true, classes.contains(User.class));
 
     }
 }

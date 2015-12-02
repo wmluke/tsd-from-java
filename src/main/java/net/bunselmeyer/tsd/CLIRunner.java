@@ -6,6 +6,8 @@ import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,7 +16,9 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
 
-public class Runner {
+public class CLIRunner {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(CLIRunner.class);
 
     public static void main(String[] args) throws IOException {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("tsd-from-java")
@@ -63,20 +67,23 @@ public class Runner {
 
         List<String> packageList = Lists.newArrayList(Splitter.on(",").omitEmptyStrings().trimResults().split(packages));
 
-        Set<Class<?>> classes = new Scanner(packageList).scan();
+        generate(module, outputFile, packageList);
 
-        System.out.println("-> Found " + classes.size() + " classes");
+
+    }
+
+    private static void generate(String moduleName, String outputFile, List<String> packages) throws IOException {
+        Set<Class<?>> classes = new Scanner(packages).scan();
+
+        LOGGER.info("Found " + classes.size() + " classes");
 
         List<Schema> schemas = new SchemaBuilder(classes).build();
 
-        System.out.println("-> Generated " + schemas.size() + " schemas");
+        LOGGER.info("Generated " + schemas.size() + " schemas");
 
-        Renderer renderer = new Renderer(module, schemas, new PrintWriter(outputFile, "UTF-8"));
-        renderer.render();
+        new Renderer(moduleName, schemas, new PrintWriter(outputFile, "UTF-8")).render();
 
-        System.out.println("-> Saved typescript definitions to `" + outputFile + "`");
-
-
+        LOGGER.info("Saved typescript definitions to `" + outputFile + "`");
     }
 
 

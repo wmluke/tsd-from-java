@@ -1,6 +1,6 @@
 package net.bunselmeyer.tsd;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 
 import java.io.StringWriter;
@@ -17,8 +17,13 @@ public class RendererTest {
         fooSchema.addProperty("aaa", "string");
         fooSchema.addProperty("bbb", "number");
 
+        Schema barSchema = new Schema("Bar");
+        barSchema.addProperty("ccc", "boolean");
+        barSchema.addProperty("ddd", "Foo");
+
         List<Schema> schemas = new ArrayList<>();
         schemas.add(fooSchema);
+        schemas.add(barSchema);
 
         StringWriter stringWriter = new StringWriter();
 
@@ -28,7 +33,9 @@ public class RendererTest {
 
         String output = stringWriter.toString();
 
-        assertEquals(true, StringUtils.isNotBlank(output));
+        String expected = IOUtils.toString(getClass().getResourceAsStream("RendererTest-output.d.ts.txt"));
+
+        assertEquals(expected, output);
 
     }
 }
