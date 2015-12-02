@@ -35,6 +35,7 @@ public class RendererTest {
 
         String expected = IOUtils.toString(getClass().getResourceAsStream("RendererTest-output.d.ts.txt"));
 
+
         assertEquals(expected, output);
 
     }
