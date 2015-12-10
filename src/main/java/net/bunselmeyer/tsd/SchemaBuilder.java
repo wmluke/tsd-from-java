@@ -113,7 +113,7 @@ public class SchemaBuilder {
 
         return properties.keySet().stream()
                 .sorted()
-                .reduce(new Schema(type.getSimpleName()), (schema, name) -> {
+                .reduce(new Schema("I" + type.getSimpleName()), (schema, name) -> {
                     JsonSchema propertySchema = properties.get(name);
                     String typeLabel = buildTypeNotation(propertySchema, jsonSchemaIndex, classNames);
 
@@ -176,17 +176,17 @@ public class SchemaBuilder {
     private String buildMapTypeNotation(ObjectSchema propertySchema, ImmutableMap<String, JsonSchema> jsonSchemaIndex, List<String> classNames) {
         ObjectSchema.AdditionalProperties additionalProperties = propertySchema.getAdditionalProperties();
         if (!(additionalProperties instanceof ObjectSchema.SchemaAdditionalProperties)) {
-            return "{[key:string]:any}";
+            return "{[key: string]: any}";
         }
         JsonSchema jsonSchema = ((ObjectSchema.SchemaAdditionalProperties) additionalProperties).getJsonSchema();
         String tsType = buildTypeNotation(jsonSchema, jsonSchemaIndex, classNames);
         // JSON any supports strings as keys
-        return "{[key:string]:" + tsType + "}";
+        return "{[key: string]: " + tsType + "}";
     }
 
     private static String getSimpleName(String classPath) {
         int i = StringUtils.lastIndexOf(classPath, ".");
-        return StringUtils.right(classPath, classPath.length() - i - 1);
+        return "I" + StringUtils.right(classPath, classPath.length() - i - 1);
     }
 
     private static String convertIdToClassPath(String id) {
