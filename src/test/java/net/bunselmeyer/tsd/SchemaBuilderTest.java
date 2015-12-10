@@ -26,7 +26,7 @@ public class SchemaBuilderTest {
         assertEquals(2, schemas.size());
 
         Schema addressSchema = schemas.get(0);
-        assertEquals("Address", addressSchema.getName());
+        assertEquals("IAddress", addressSchema.getName());
         assertEquals(5, addressSchema.getProperties().size());
         assertEquals("string", addressSchema.getProperty("streetAddress").getType());
         assertEquals("string", addressSchema.getProperty("city").getType());
@@ -36,17 +36,17 @@ public class SchemaBuilderTest {
 
 
         Schema userSchema = schemas.get(1);
-        assertEquals("User", userSchema.getName());
+        assertEquals("IUser", userSchema.getName());
         assertEquals(9, userSchema.getProperties().size());
         assertEquals("string", userSchema.getProperty("firstName").getType());
         assertEquals("string", userSchema.getProperty("lastName").getType());
-        assertEquals("Address", userSchema.getProperty("homeAddress").getType());
-        assertEquals("Address", userSchema.getProperty("workAddress").getType());
+        assertEquals("IAddress", userSchema.getProperty("homeAddress").getType());
+        assertEquals("IAddress", userSchema.getProperty("workAddress").getType());
         assertEquals("string", userSchema.getProperty("dateOfBirth").getType());
         assertEquals("number", userSchema.getProperty("favoriteNumber").getType());
-        assertEquals("{[key:string]:number}", userSchema.getProperty("lookupFoo").getType());
-        assertEquals("{[key:string]:string}", userSchema.getProperty("lookupBar").getType());
-        assertEquals("Address[]", userSchema.getProperty("additionalAddresses").getType());
+        assertEquals("{[key: string]: number}", userSchema.getProperty("lookupFoo").getType());
+        assertEquals("{[key: string]: string}", userSchema.getProperty("lookupBar").getType());
+        assertEquals("IAddress[]", userSchema.getProperty("additionalAddresses").getType());
 
     }
 }
