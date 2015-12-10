@@ -1,19 +1,21 @@
-module App.Model {
+declare module App.Model {
 
     export interface Foo {
 
-        aaa:string;
+        aaa: string;
 
-        bbb:number;
+        bbb: number;
 
     }
+
 
     export interface Bar {
 
-        ccc:boolean;
+        ccc: boolean;
 
-        ddd:Foo;
+        ddd: Foo;
 
     }
+
 
 }
